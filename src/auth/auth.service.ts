@@ -27,6 +27,13 @@ export class AuthService {
           hash,
         },
       });
+      const roleUser = await this.prisma.roleUser.create({
+        data: {
+          roleId: 2,
+          userId: user.id,
+        },
+      });
+
       delete user.hash;
       return user;
     } catch (error) {

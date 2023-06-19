@@ -1,31 +1,26 @@
+import { ProductDto } from './dto/product.dto';
 import {
   Controller,
   Post,
   Body,
   Get,
   Param,
-  Patch,
   Delete,
+  Put,
+  UseGuards,
 } from '@nestjs/common';
 
 import { ProductsService } from './products.service';
+import { AuthGuard } from '@nestjs/passport';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
-  addProduct(
-    @Body('title') prodTitle: string,
-    @Body('description') prodDesc: string,
-    @Body('price') prodPrice: number,
-  ) {
-    const generatedId = this.productsService.insertProduct(
-      prodTitle,
-      prodDesc,
-      prodPrice,
-    );
-    return { id: generatedId };
+  addProduct(@Body() productDto: ProductDto) {
+    return this.productsService.insertProduct(productDto);
   }
 
   @Get()
@@ -34,24 +29,17 @@ export class ProductsController {
   }
 
   @Get(':id')
-  getProduct(@Param('id') prodId: string) {
+  getProduct(@Param('id') prodId: number) {
     return this.productsService.getSingleProduct(prodId);
   }
 
-  @Patch(':id')
-  updateProduct(
-    @Param('id') prodId: string,
-    @Body('title') prodTitle: string,
-    @Body('description') prodDesc: string,
-    @Body('price') prodPrice: number,
-  ) {
-    this.productsService.updateProduct(prodId, prodTitle, prodDesc, prodPrice);
-    return null;
+  @Put(':id')
+  updateProduct(@Param('id') prodId: number, @Body() productDto: ProductDto) {
+    return this.productsService.updateProduct(prodId, productDto);
   }
 
   @Delete(':id')
-  removeProduct(@Param('id') prodId: string) {
-    this.productsService.deleteProduct(prodId);
-    return null;
+  removeProduct(@Param('id') prodId: number) {
+    return this.productsService.deleteProduct(prodId);
   }
 }

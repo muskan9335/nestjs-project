@@ -21,7 +21,7 @@ export class UserController {
   // @UseGuards(AuthGuard)
 
   @Get('profile')
-  getProfile(@GetUser() user: User) {
+  getProfile(user: User) {
     return this.userService.profile(user);
   }
 

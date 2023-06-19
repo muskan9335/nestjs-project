@@ -1,53 +1,58 @@
+import { ProductDto } from './dto/product.dto';
 import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { Product } from './products.model';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ProductsService {
-  private products: Product[] = [];
+  constructor(private prisma: PrismaService) {}
 
-  insertProduct(title: string, desc: string, price: number) {
-    const prodId = Math.random().toString();
-    const newProduct = new Product(prodId, title, desc, price);
-    this.products.push(newProduct);
-    return prodId;
+  async insertProduct(productDto: ProductDto) {
+    const product = await this.prisma.product.create({
+      data: {
+        title: productDto.title,
+        description: productDto.description,
+        price: productDto.price,
+      },
+    });
+    return product;
   }
 
   getProducts() {
-    return [...this.products];
+    return this.prisma.product.findMany();
   }
 
-  getSingleProduct(productId: string) {
-    const product = this.findProduct(productId)[0];
-    return { ...product };
+  getSingleProduct(productId: number) {
+    const id = +productId;
+    console.log(id);
+    const product = this.prisma.product.findFirst({
+      where: { id },
+    });
+    console.log(product);
+    if (!product) throw new NotFoundException('Not Found');
+    return product;
   }
 
-  updateProduct(productId: string, title: string, desc: string, price: number) {
-    const [product, index] = this.findProduct(productId);
-    const updatedProduct = { ...product };
-    if (title) {
-      updatedProduct.title = title;
-    }
-    if (desc) {
-      updatedProduct.description = desc;
-    }
-    if (price) {
-      updatedProduct.price = price;
-    }
-    this.products[index] = updatedProduct;
+  async updateProduct(productId: number, productDto: ProductDto) {
+    const id = +productId;
+    const product = await this.prisma.product.update({
+      where: { id },
+      data: {
+        title: productDto.title,
+        description: productDto.description,
+        price: productDto.price,
+      },
+    });
+
+    return product;
   }
 
-  deleteProduct(prodId: string) {
-    const index = this.findProduct(prodId)[1];
-    this.products.splice(index, 1);
-  }
-
-  private findProduct(id: string): [Product, number] {
-    const productIndex = this.products.findIndex((prod) => prod.id === id);
-    const product = this.products[productIndex];
-    if (!product) {
-      throw new NotFoundException('Could not find product.');
-    }
-    return [product, productIndex];
+  async deleteProduct(prodId: number) {
+    const id = +prodId;
+    const product = await this.prisma.product.delete({
+      where: { id },
+    });
+    return 'Success';
   }
 }
